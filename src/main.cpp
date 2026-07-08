@@ -8,30 +8,36 @@
 #include <GyverGFX.h>
 #include <RunningGFX.h>
 
-
-MAX7219<4, 1, 5> mtrx;
+MAX7219<4, 1, 5> mtrx; //// 4 matrices, 1 row
 RunningGFX run(&mtrx);
 SettingsGyver settings("My Settings");
 GyverDBFile db(&LittleFS, "/data.db");
 
-const char* buttons[] = {
+const char *buttons[] = {
     "Busy",
     "Away",
     "Available",
 };
-
 
 DB_KEYS(
     kk,
     wifi_ssid,
     wifi_pass,
     apply);
-String input;
+
 String input_data;
+
+void print_text(const char *text) // Display text on matrix with scrolling
+{
+  run.stop();
+  mtrx.clear();
+  run.setText(text);
+  run.start();
+}
 
 void build(sets::Builder &b)
 {
-  if (WiFi.status() != WL_CONNECTED)
+  if (WiFi.status() != WL_CONNECTED) // Show WiFi settings if not connected
   {
     {
       sets::Group g(b, "WiFi");
@@ -52,41 +58,40 @@ void build(sets::Builder &b)
       b.Input("", &input_data);
       if (b.Button("Send"))
       {
+        static String send_data;
+        send_data = input_data;
         run.stop();
         mtrx.clear();
-        run.setText(input_data);
+        mtrx.update();
+        run.setText(send_data);
         run.start();
       }
     }
+    // Quick status buttons
     if (b.beginButtons())
     {
       if (b.Button(buttons[0]))
       {
-        run.stop();
-        mtrx.clear();
-        run.setText(buttons[0]);
-        run.start();
+        print_text(buttons[0]);
       }
       if (b.Button(buttons[1]))
       {
-        run.stop();
-        mtrx.clear();
-        run.setText(buttons[1]);
-        run.start();
+        print_text(buttons[1]);
       }
       if (b.Button(buttons[2]))
       {
-        run.stop();
-        mtrx.clear();
-        run.setText(buttons[2]);
-        run.start();
+        print_text(buttons[2]);
       }
       b.endButtons();
     }
+    if (b.Button("Clear"))
+    {
+      run.stop();
+      mtrx.clear();
+      mtrx.update();
+    }
   }
 }
-
-
 
 void setup()
 {
@@ -106,13 +111,14 @@ void setup()
   db.init(kk::wifi_pass, "");
 
   WiFiConnector.connect(db[kk::wifi_ssid], db[kk::wifi_pass]);
-   while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println();
-    Serial.print("Connected: ");
-    Serial.println(WiFi.localIP());
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.print("Connected: ");
+  Serial.println(WiFi.localIP());
   settings.begin();
   settings.onBuild(build);
 }
