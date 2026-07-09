@@ -154,3 +154,7 @@ After Wi-Fi configuration, you can control the sign via apps. The apps will auto
 - **Away** - displays "Away" status
 - **Available** - displays "Available" status
 - **Clear** - clears the matrix
+
+### Settings
+
+- **Bright** - slider for adjusting matrix brightness (0 to 15)

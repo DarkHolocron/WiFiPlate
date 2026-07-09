@@ -8,7 +8,7 @@
 #include <GyverGFX.h>
 #include <RunningGFX.h>
 
-MAX7219<4, 1, 5> mtrx; //// 4 matrices, 1 row
+MAX7219<4, 1, 5> mtrx; // 4 matrices, 1 row
 RunningGFX run(&mtrx);
 SettingsGyver settings("My Settings");
 GyverDBFile db(&LittleFS, "/data.db");
@@ -26,6 +26,7 @@ DB_KEYS(
     apply);
 
 String input_data;
+byte bright = 5; //Default brightness value
 
 void print_text(const char *text) // Display text on matrix with scrolling
 {
@@ -90,13 +91,20 @@ void build(sets::Builder &b)
       mtrx.clear();
       mtrx.update();
     }
+    {
+      sets::Group g(b, "Settings");
+      if(b.Slider("Bright", 0, 15, 1, "", &bright)){
+        mtrx.setBright(bright);
+
+      }
+    }
   }
 }
 
 void setup()
 {
   mtrx.begin();
-  mtrx.setBright(5);
+  mtrx.setBright(bright);
   run.setSpeed(15);
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
